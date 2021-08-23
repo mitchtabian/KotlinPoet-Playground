@@ -15,8 +15,8 @@ import javax.lang.model.element.TypeElement
 
 @AutoService(Processor::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedOptions(AutoMapProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
-class AutoMapProcessor : AbstractProcessor() {
+@SupportedOptions(MyProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
+class MyProcessor : AbstractProcessor() {
 
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
