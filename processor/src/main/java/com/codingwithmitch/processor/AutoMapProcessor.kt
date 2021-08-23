@@ -47,7 +47,7 @@ class AutoMapProcessor : AbstractProcessor() {
 
         // TODO("How can I get the person params?...")
 
-        val fileSpec = FileSpec.builder(packageOfMethod, "PersonGenerated")
+        val fileSpec = FileSpec.builder(packageOfMethod, "Dependencies")
         val personClass = ClassName("com.codingwithmitch.kotlinpoetplayground", "Person")
         fileSpec.addType(
             TypeSpec.classBuilder("Dependencies")
