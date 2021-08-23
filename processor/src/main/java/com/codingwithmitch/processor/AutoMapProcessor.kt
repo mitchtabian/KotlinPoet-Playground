@@ -2,16 +2,15 @@ package com.codingwithmitch.processor
 
 import com.codingwithmitch.annotation.Provide
 import com.google.auto.service.AutoService
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
-import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.DeclaredType
-import javax.lang.model.type.TypeMirror
 
 @AutoService(Processor::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -30,7 +29,6 @@ class AutoMapProcessor : AbstractProcessor() {
             }
 
             generateObject(
-                functionElement = element,
                 packageOfMethod = processingEnv.elementUtils.getPackageOf(element).toString(),
             )
         }
@@ -38,22 +36,11 @@ class AutoMapProcessor : AbstractProcessor() {
         return false
     }
 
-    private fun generateObject(functionElement: Element,  packageOfMethod: String) {
+    private fun generateObject(packageOfMethod: String) {
         val generatedSourcesRoot: String = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME].orEmpty()
         if(generatedSourcesRoot.isEmpty()) {
             processingEnv.messager.errormessage { "Can't find the target directory for generated Kotlin files." }
             return
-        }
-
-        val map: MutableMap<String, Any> = mutableMapOf() // <Field name, Field value>
-        (functionElement as ExecutableElement).enclosedElements.forEach { element ->
-            val typeArgs = if(element.asType() is DeclaredType){
-                (element.asType() as DeclaredType).typeArguments
-            }
-            else{
-                emptyList<TypeMirror>()
-            }
-            map[element.asType().asTypeName().toString()] = typeArgs.single()
         }
         val file = File(generatedSourcesRoot)
         file.mkdir()

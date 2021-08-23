@@ -22,7 +22,6 @@ fun providePerson(): Person {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        println("gdfnkgnfd: ${person}")
         val dependencies = Dependencies()
         setContent {
             KotlinPoetPlaygroundTheme {
