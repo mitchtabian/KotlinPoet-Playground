@@ -1,5 +1,5 @@
 package com.codingwithmitch.annotation
 
-@Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class AutoMap()
+annotation class Description()
