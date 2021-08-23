@@ -1,88 +1,79 @@
 package com.codingwithmitch.processor
 
-import com.codingwithmitch.annotation.Description
+import com.codingwithmitch.annotation.Provide
 import com.google.auto.service.AutoService
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.*
 import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.tools.Diagnostic
+import javax.lang.model.type.DeclaredType
+import javax.lang.model.type.TypeMirror
 
 @AutoService(Processor::class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8) // to support Java 8
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions(AutoMapProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
-class AutoMapProcessor: AbstractProcessor() {
-
-    override fun process(
-        annotations: MutableSet<out TypeElement>?,
-        roundEnv: RoundEnvironment?
-    ): Boolean {
-        roundEnv?.getElementsAnnotatedWith(Description::class.java)?.forEach { classElement ->
-            processingEnv.messager.printMessage(Diagnostic.Kind.NOTE, "YOOOO STARTING....")
-            if (classElement.kind != ElementKind.CLASS) {
-                processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Can only be applied to class's,  element: $classElement ")
-                return false
-            }
-            val generatedSourcesRoot: String = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME].orEmpty()
-            if(generatedSourcesRoot.isEmpty()) {
-                processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Can't find the target directory for generated Kotlin files.")
-                return false
-            }
-            processingEnv.messager.printMessage(Diagnostic.Kind.NOTE, "PROCEEDING...!!")
-
-            var count = 0
-            // loop through the fields, methods, constructors, and member types
-            classElement.enclosedElements.forEach { element ->
-
-                // Found a field
-                if(element.kind == ElementKind.FIELD){
-                    count++
-                }
-            }
-
-            val function = FunSpec.builder("description")
-                .receiver(classElement::class)
-                .addStatement("""
-                    return 'this class has count fields'
-                """)
-                .build()
-//            val file = File(generatedSourcesRoot).apply { mkdir() }
-            FileSpec.builder(processingEnv.elementUtils.getPackageOf(classElement).toString(), "DescriptionGenerated")
-                .addFunction(function)
-                .build()
-                .writeTo(processingEnv.filer)
-
-//            val stringType = TypeVariableName("String")
-//            val anyType = TypeVariableName("Any")
-//            val mapType = Map::class.asClassName()
-//                .parameterizedBy(stringType, anyType)
-//            classElement.enclosedElements.forEach { element ->
-//                val function = FunSpec.builder("toMap")
-//                    .receiver(element::class)
-//                    .returns(mapType)
-//                    .addStatement("return mapOf(" +
-//                            "name to name," +
-//                            "weight to weight," +
-//                            ")")
-//                    .build()
-//
-//                val file = File(generatedSourcesRoot).apply { mkdir() }
-//                FileSpec.builder(processingEnv.elementUtils.getPackageOf(classElement).toString(), "ToMapGenerated")
-//                    .addFunction(function)
-//                    .build()
-//                    .writeTo(file)
-//            }
-        }
-        return false
-    }
+class AutoMapProcessor : AbstractProcessor() {
 
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
     }
 
+    override fun process(annotations: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
+        roundEnv.getElementsAnnotatedWith(Provide::class.java).forEach { element ->
+            if (element.kind != ElementKind.METHOD) {
+                processingEnv.messager.errormessage { "Can only be applied to functions,  element: $element " }
+                return false
+            }
+
+            generateObject(
+                functionElement = element,
+                packageOfMethod = processingEnv.elementUtils.getPackageOf(element).toString(),
+            )
+        }
+
+        return false
+    }
+
+    private fun generateObject(functionElement: Element,  packageOfMethod: String) {
+        val generatedSourcesRoot: String = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME].orEmpty()
+        if(generatedSourcesRoot.isEmpty()) {
+            processingEnv.messager.errormessage { "Can't find the target directory for generated Kotlin files." }
+            return
+        }
+
+        val map: MutableMap<String, Any> = mutableMapOf() // <Field name, Field value>
+        (functionElement as ExecutableElement).enclosedElements.forEach { element ->
+            val typeArgs = if(element.asType() is DeclaredType){
+                (element.asType() as DeclaredType).typeArguments
+            }
+            else{
+                emptyList<TypeMirror>()
+            }
+            map[element.asType().asTypeName().toString()] = typeArgs.single()
+        }
+        val file = File(generatedSourcesRoot)
+        file.mkdir()
+        val fileSpec = FileSpec.builder(packageOfMethod, "PersonGenerated")
+        val personClass = ClassName("com.codingwithmitch.kotlinpoetplayground", "Person")
+        fileSpec.addType(
+            TypeSpec.classBuilder("Dependencies")
+                .addFunction(
+                    FunSpec.builder("providePerson")
+                        .addStatement("return %T(%S,%L)", personClass, "Mitch", 200.00)
+                        .build()
+                )
+                .build()
+        )
+        fileSpec.build().writeTo(file)
+    }
+
+    override fun getSupportedAnnotationTypes(): MutableSet<String> {
+        return mutableSetOf(Provide::class.java.canonicalName)
+    }
 }
 
 

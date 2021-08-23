@@ -1,5 +1,5 @@
 package com.codingwithmitch.annotation
 
-@Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class Description()
+@Target(AnnotationTarget.FUNCTION)
+annotation class Provide()
