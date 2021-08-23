@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 
@@ -29,6 +30,7 @@ class AutoMapProcessor : AbstractProcessor() {
             }
 
             generateObject(
+                functionElement = element,
                 packageOfMethod = processingEnv.elementUtils.getPackageOf(element).toString(),
             )
         }
@@ -36,14 +38,15 @@ class AutoMapProcessor : AbstractProcessor() {
         return false
     }
 
-    private fun generateObject(packageOfMethod: String) {
+    private fun generateObject(functionElement: Element, packageOfMethod: String) {
         val generatedSourcesRoot: String = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME].orEmpty()
         if(generatedSourcesRoot.isEmpty()) {
             processingEnv.messager.errormessage { "Can't find the target directory for generated Kotlin files." }
             return
         }
-        val file = File(generatedSourcesRoot)
-        file.mkdir()
+
+        // TODO("How can I get the person params?...")
+
         val fileSpec = FileSpec.builder(packageOfMethod, "PersonGenerated")
         val personClass = ClassName("com.codingwithmitch.kotlinpoetplayground", "Person")
         fileSpec.addType(
@@ -55,6 +58,9 @@ class AutoMapProcessor : AbstractProcessor() {
                 )
                 .build()
         )
+
+        val file = File(generatedSourcesRoot)
+        file.mkdir()
         fileSpec.build().writeTo(file)
     }
 
