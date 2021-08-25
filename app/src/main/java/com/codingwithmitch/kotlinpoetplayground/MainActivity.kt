@@ -17,7 +17,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             KotlinPoetPlaygroundTheme {
                 Surface(color = MaterialTheme.colors.background) {
-                    Greeting(dependencies.person0().name)
+                    Greeting(dependencies.mitch().name)
+                    Greeting(dependencies.blake().name)
                 }
             }
         }

@@ -11,7 +11,6 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.TypeMirror
 
 @AutoService(Processor::class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -37,8 +36,8 @@ class MyProcessor : AbstractProcessor() {
     private fun generateProvidesFactories(modulesWithProvides: List<ModuleWithProvides>){
         // Loop through modules
         modulesWithProvides.forEach { moduleWithProvides ->
-            // list of factory class names
-            val factories: MutableList<String> = mutableListOf()
+            // list of factory class names and the name of argument they provide
+            val factories: MutableList<ProvidesElementWithArgs> = mutableListOf()
             // Build Factories
             moduleWithProvides.providesFunctions.forEach { providesFn ->
                 val providesType = providesFn.returnType
@@ -47,7 +46,12 @@ class MyProcessor : AbstractProcessor() {
                     providesFn.returnType.toString().lastIndexOf(".") + 1
                 )
                 val className = "${moduleWithProvides.module.enclosingElement.simpleName}_Provide${providesTypeString}Factory"
-                factories.add(className)
+                val providesElementWithArgs = ProvidesElementWithArgs(
+                    element = providesFn,
+                    factoryClassName = className,
+                    argumentName = providesFn.getAnnotation(Provides::class.java).argumentName,
+                )
+                factories.add(providesElementWithArgs)
                 val modulePackage = processingEnv.elementUtils.getPackageOf(moduleWithProvides.module).toString()
                 val fileSpec = FileSpec.builder(
                     modulePackage,
@@ -116,23 +120,21 @@ class MyProcessor : AbstractProcessor() {
      * @param moduleElement: The object annotated with @Module
      * @param factories: List of the factory class names that were generated
      */
-    private fun generateDependencyHolder(moduleElement: Element, factories: List<String>){
+    private fun generateDependencyHolder(moduleElement: Element, factories: List<ProvidesElementWithArgs>){
         val className = "${moduleElement.enclosingElement.simpleName}Dependencies"
         val modulePackage = processingEnv.elementUtils.getPackageOf(moduleElement).toString()
         val fileSpec = FileSpec.builder(modulePackage, className)
         val classBuilder = TypeSpec.classBuilder("${moduleElement.enclosingElement.simpleName}Dependencies")
-        var count = 0
-        factories.forEach{ factoryClassName ->
+        factories.forEach { providesElemWithArgs ->
             val factoryClass = ClassName(
                 packageName = modulePackage,
-                factoryClassName
+                providesElemWithArgs.factoryClassName
             )
             classBuilder.addFunction(
-                FunSpec.builder("person$count")
+                FunSpec.builder(providesElemWithArgs.argumentName)
                     .addStatement("return ${factoryClass.simpleName}.create().get()")
                     .build()
             )
-            count++
         }
         fileSpec.addType(classBuilder.build())
         val file = getRootFile()

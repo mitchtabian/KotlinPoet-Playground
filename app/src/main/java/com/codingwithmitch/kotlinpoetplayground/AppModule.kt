@@ -12,11 +12,19 @@ import com.codingwithmitch.annotation.Provides
 @Module
 object AppModule {
 
-    @Provides(argumentName = "person")
+    @Provides(argumentName = "mitch")
     fun providePerson(): Person {
         return Person(
             name = "Mitch",
             weight = 200.00
+        )
+    }
+
+    @Provides(argumentName = "blake")
+    fun provideAnotherPerson(): Person {
+        return Person(
+            name = "Blake",
+            weight = 190.00
         )
     }
 }
