@@ -27,6 +27,7 @@ object AppModule {
             weight = 190.00
         )
     }
+
 }
 
 

@@ -41,15 +41,13 @@ class MyProcessor : AbstractProcessor() {
             // Build Factories
             moduleWithProvides.providesFunctions.forEach { providesFn ->
                 val providesType = providesFn.returnType
-                val providesTypeString = providesType.toString().removeRange(
-                    0,
-                    providesFn.returnType.toString().lastIndexOf(".") + 1
-                )
-                val className = "${moduleWithProvides.module.enclosingElement.simpleName}_Provide${providesTypeString}Factory"
+                val argumentName = providesFn.getAnnotation(Provides::class.java).argumentName
+                checkDuplicateArgumentNames(factories.map { it.argumentName })
+                val className = "${moduleWithProvides.module.enclosingElement.simpleName}_Provide${argumentName}Factory"
                 val providesElementWithArgs = ProvidesElementWithArgs(
                     element = providesFn,
                     factoryClassName = className,
-                    argumentName = providesFn.getAnnotation(Provides::class.java).argumentName,
+                    argumentName = argumentName,
                 )
                 factories.add(providesElementWithArgs)
                 val modulePackage = processingEnv.elementUtils.getPackageOf(moduleWithProvides.module).toString()
@@ -199,49 +197,10 @@ class MyProcessor : AbstractProcessor() {
         interfaceFileSpec.build().writeTo(file)
     }
 
-    private fun generateObject(methodElement: ExecutableElement, packageOfMethod: String) {
-        val generatedSourcesRoot: String = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME].orEmpty()
-        if(generatedSourcesRoot.isEmpty()) {
-            processingEnv.messager.errormessage { "Can't find the target directory for generated Kotlin files." }
-            return
+    private fun checkDuplicateArgumentNames(argumentNames: List<String>) {
+        if(argumentNames.groupingBy { it }.eachCount().any { it.value > 1 }){
+            processingEnv.messager.errormessage { "Cannot have duplicate argument names." }
         }
-
-//        val typeArgs = methodElement.run {
-//            if (this is DeclaredType) {
-//                typeArguments
-//            } else {
-//                emptyList<TypeMirror>()
-//            }
-//        }
-
-        val fileSpec = FileSpec.builder(packageOfMethod, "Dependencies")
-//        val personClass = ClassName("com.codingwithmitch.kotlinpoetplayground", "Person")
-        fileSpec.addType(
-            TypeSpec.classBuilder("Dependencies")
-                .addFunction(
-                    FunSpec.overriding(methodElement)
-                        .build()
-//                    FunSpec.builder("providePerson")
-//                        .addStatement("return %T(%S,%L)", personClass, "Mitch", 200.00)
-//                        .build()
-                )
-                .build()
-        )
-
-//        val personClass = ClassName("com.codingwithmitch.kotlinpoetplayground", "Person")
-//        fileSpec.addType(
-//            TypeSpec.classBuilder("Dependencies")
-//                .addFunction(
-//                    FunSpec.builder("providePerson")
-//                        .addStatement("return %T(%S,%L)", personClass, "Mitch", 200.00)
-//                        .build()
-//                )
-//                .build()
-//        )
-
-        val file = File(getGeneratedSourcesRoot())
-        file.mkdir()
-        fileSpec.build().writeTo(file)
     }
 
     private fun getGeneratedSourcesRoot(): String{
