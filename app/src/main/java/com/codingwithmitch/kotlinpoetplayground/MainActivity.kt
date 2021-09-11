@@ -3,6 +3,7 @@ package com.codingwithmitch.kotlinpoetplayground
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -18,8 +19,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             KotlinPoetPlaygroundTheme {
                 Surface(color = MaterialTheme.colors.background) {
-                    Greeting(dependencies.mitch().name)
-                    Greeting(dependencies.blake().name)
+                    Column{
+                        Greeting(dependencies.mitch().name)
+                        Greeting(dependencies.blake().name)
+                    }
                 }
             }
         }
