@@ -1,1 +1,1 @@
-This is a playground. I don't recommend using any of this code.
+Don't copy this code. I am just playing around with code generation.
