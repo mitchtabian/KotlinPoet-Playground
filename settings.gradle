@@ -8,3 +8,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "KotlinPoet Playground"
 include ':app'
+include ':processor'
+include ':annotation'
