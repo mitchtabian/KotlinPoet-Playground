@@ -17,7 +17,6 @@ import javax.lang.model.element.TypeElement
 @SupportedOptions(MyProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
 class MyProcessor : AbstractProcessor() {
 
-
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
     }

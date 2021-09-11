@@ -13,6 +13,7 @@ import com.codingwithmitch.kotlinpoetplayground.ui.theme.KotlinPoetPlaygroundThe
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Create instance of generated dependencies
         val dependencies = AppModuleDependencies()
         setContent {
             KotlinPoetPlaygroundTheme {
